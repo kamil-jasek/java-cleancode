@@ -9,7 +9,7 @@ import pl.sda.cleancode.order.command.MakeOrderCmd;
 import pl.sda.cleancode.order.domain.Order;
 import pl.sda.cleancode.order.domain.OrderConfirmation;
 import pl.sda.cleancode.order.domain.OrderId;
-import pl.sda.cleancode.order.event.OrderCreated;
+import pl.sda.cleancode.order.event.OrderMade;
 import pl.sda.cleancode.order.exception.CustomerNotExistsException;
 import pl.sda.cleancode.order.infra.port.CustomerPort;
 import pl.sda.cleancode.order.infra.port.OrderRepoPort;
@@ -58,7 +58,7 @@ public class OrderServiceFacade {
             randomUUID(),
             Instant.now(clock),
             null,
-            OrderCreated.from(order)
+            OrderMade.from(order)
         ));
         return new OrderConfirmation(order.id());
     }

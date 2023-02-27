@@ -11,18 +11,18 @@ import java.util.UUID;
 
 import static java.util.stream.Collectors.toList;
 
-public record OrderCreated(
+public record OrderMade(
     @NonNull UUID id,
     @NonNull UUID customerId,
     @NonNull Instant createTime,
     @NonNull String status,
     @NonNull String currency,
-    @NonNull List<OrderItemEvent> orderItems,
+    @NonNull List<OrderMadeItem> orderItems,
     @NonNull BigDecimal discount,
     @NonNull BigDecimal deliveryCost
 ) implements DomainEventData {
 
-    public record OrderItemEvent(
+    public record OrderMadeItem(
         @NonNull UUID productId,
         @NonNull BigDecimal originalPrice,
         @NonNull String originalCurrency,
@@ -33,8 +33,8 @@ public record OrderCreated(
     ) {
     }
 
-    public static OrderCreated from(Order order) {
-        return new OrderCreated(
+    public static OrderMade from(Order order) {
+        return new OrderMade(
             order.id().id(),
             order.customerId().id(),
             order.createTime(),
@@ -42,7 +42,7 @@ public record OrderCreated(
             order.orderItems().baseCurrency().name(),
             order.orderItems().orderItems()
                 .stream()
-                .map(item -> new OrderItemEvent(
+                .map(item -> new OrderMadeItem(
                     item.orderItem().productId().id(),
                     item.orderItem().price().value(),
                     item.orderItem().price().currency().name(),
