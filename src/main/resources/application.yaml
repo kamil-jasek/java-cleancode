@@ -1,0 +1,45 @@
+orders:
+  discount-settings:
+    free-delivery-days:
+      - 2022-02-14
+      - 2022-03-09
+      - 2022-04-01
+      - 2022-05-26
+      - 2022-06-01
+      - 2022-11-11
+      - 2022-12-06
+
+  delivery-cost-settings:
+    default-delivery-cost:
+      value: 20.00
+      currency: USD
+    delivery-cost-levels:
+      - min-price:
+          value: 400.00
+          currency: USD
+        max-weight:
+          value: 2.00
+          unit: KG
+        delivery-cost:
+          value: 0.00
+          currency: USD
+      - min-price:
+          value: 200.00
+          currency: USD
+        max-weight:
+          value: 1.00
+          unit: KG
+        delivery-cost:
+          value: 10.00
+          currency: USD
+      - min-price:
+          value: 100.00
+          currency: USD
+        max-weight:
+          value: 1.00
+          unit: KG
+        delivery-cost:
+          value: 15.00
+          currency: USD
+
+
