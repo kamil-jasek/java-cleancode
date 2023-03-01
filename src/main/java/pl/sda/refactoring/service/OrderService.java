@@ -21,13 +21,13 @@ import static java.util.UUID.randomUUID;
 @Transactional
 public class OrderService {
 
-    private DiscountService discountService;
-    private CurrencyService currencyService;
-    private CustomerService customerService;
-    private OrderRepo orderRepo;
-    private EmailService emailService;
-    private List<LocalDate> freeDeliveryDays;
-    private List<String> emailRecipients;
+    private final DiscountService discountService;
+    private final CurrencyService currencyService;
+    private final CustomerService customerService;
+    private final OrderRepo orderRepo;
+    private final EmailService emailService;
+    private final List<LocalDate> freeDeliveryDays;
+    private final List<String> emailRecipients;
 
     public OrderService(@NonNull DiscountService discountService,
                         @NonNull CurrencyService currencyService,
@@ -49,75 +49,77 @@ public class OrderService {
                           @NonNull Currency currency,
                           String coupon) {
         boolean exists = customerService.exists(customerId);
-        if (!exists) {
+        if (exists) {
+            if (!orderItems.isEmpty()) {
+                // exchange currencies in order items
+                List<OrderItem> exchItems = new ArrayList<>();
+                for (var item : orderItems) {
+                    var exchItem = item.toBuilder()
+                        .id(UUID.randomUUID())
+                        .exchPrice(currencyService.exchange(item.price(), item.currency(), currency))
+                        .build();
+                    exchItems.add(exchItem);
+                }
+
+                // calculate delivery
+                var tp = BigDecimal.ZERO;
+                var twInGrams = 0;
+                for (var item : exchItems) {
+                    tp = tp.add(item.exchPrice().multiply(BigDecimal.valueOf(item.quantity())));
+                    switch (item.weightUnit()) {
+                        case GM -> twInGrams += item.weight();
+                        case KG -> twInGrams += item.weight() * 1000;
+                        case LB -> twInGrams += item.weight() * 453.59237;
+                    }
+                }
+                var deliveryPrice = BigDecimal.ZERO;
+                if (tp.compareTo(new BigDecimal("400.00")) > 0 && twInGrams < 2000) {
+                    deliveryPrice = new BigDecimal("0.00"); // free delivery
+                } else if (tp.compareTo(new BigDecimal("200.00")) > 0 && twInGrams < 1000) {
+                    deliveryPrice = new BigDecimal("12.00"); // first level
+                } else if (tp.compareTo(new BigDecimal("100.00")) > 0 && twInGrams < 1000) {
+                    deliveryPrice = new BigDecimal("15.00"); // second level
+                } else {
+                    // default delivery
+                    deliveryPrice = new BigDecimal("20.00");
+                }
+
+                // calculate discount
+                var discountPrice = BigDecimal.ZERO;
+                if (coupon != null) {
+                    var discount = discountService.getDiscount(coupon);
+                    if (discount != null) {
+                        discountPrice = tp.multiply(BigDecimal.valueOf(discount.value()));
+                        discountService.deactivate(coupon, customerId);
+                    }
+                }
+                if (freeDeliveryDays.contains(LocalDate.now())) {
+                    discountPrice = discountPrice.add(deliveryPrice);
+                }
+
+                var order = Order.builder()
+                    .id(randomUUID())
+                    .ctime(Instant.now())
+                    .currency(currency)
+                    .status(OrderStatus.CONFIRMED)
+                    .customerId(customerId)
+                    .items(exchItems)
+                    .totalExch(tp)
+                    .delivery(deliveryPrice)
+                    .discount(discountPrice)
+                    .discountedTotal(tp.subtract(discountPrice))
+                    .discountedDeliveryTotal(tp.add(deliveryPrice))
+                    .build();
+                orderRepo.save(order);
+                sendEmail(order);
+                return order.id();
+            } else {
+                throw new EmptyOrderItemsListException();
+            }
+
+        } else {
             throw new CustomerNotFoundException("customer not found " + customerId);
         }
-        if (orderItems.isEmpty()) {
-            throw new EmptyOrderItemsListException();
-        }
-
-        // exchange currencies in order items
-        List<OrderItem> exchItems = new ArrayList<>();
-        for (var item : orderItems) {
-            var exchItem = item.toBuilder()
-                .id(UUID.randomUUID())
-                .exchPrice(currencyService.exchange(item.price(), item.currency(), currency))
-                .build();
-            exchItems.add(exchItem);
-        }
-
-        // calculate delivery
-        var tp = BigDecimal.ZERO;
-        var twInGrams = 0;
-        for (var item : exchItems) {
-            tp = tp.add(item.exchPrice().multiply(BigDecimal.valueOf(item.quantity())));
-            switch (item.weightUnit()) {
-                case GM -> twInGrams += item.weight();
-                case KG -> twInGrams += item.weight() * 1000;
-                case LB -> twInGrams += item.weight() * 453.59237;
-            }
-        }
-        var deliveryPrice = BigDecimal.ZERO;
-        if (tp.compareTo(new BigDecimal("400.00")) > 0 && twInGrams < 2000) {
-            deliveryPrice = new BigDecimal("0.00"); // free delivery
-        } else if (tp.compareTo(new BigDecimal("200.00")) > 0 && twInGrams < 1000) {
-            deliveryPrice = new BigDecimal("12.00"); // first level
-        } else if (tp.compareTo(new BigDecimal("100.00")) > 0 && twInGrams < 1000) {
-            deliveryPrice = new BigDecimal("15.00"); // second level
-        } else {
-            // default delivery
-            deliveryPrice = new BigDecimal("20.00");
-        }
-
-        // calculate discount
-        var discountPrice = BigDecimal.ZERO;
-        if (coupon != null) {
-            var discount = discountService.getDiscount(coupon);
-            if (discount != null) {
-                discountPrice = tp.multiply(BigDecimal.valueOf(discount.value()));
-                discountService.deactivate(coupon, customerId);
-            }
-        }
-        if (freeDeliveryDays.contains(LocalDate.now())) {
-            discountPrice = discountPrice.add(deliveryPrice);
-        }
-
-        var order = Order.builder()
-            .id(randomUUID())
-            .ctime(Instant.now())
-            .currency(currency)
-            .status(OrderStatus.CONFIRMED)
-            .customerId(customerId)
-            .items(exchItems)
-            .totalExch(tp)
-            .delivery(deliveryPrice)
-            .discount(discountPrice)
-            .discountedTotal(tp.subtract(discountPrice))
-            .discountedDeliveryTotal(tp.add(deliveryPrice))
-            .build();
-        orderRepo.save(order);
-        sendEmail(order);
-        return order.id();
     }
 
     private void sendEmail(Order order) {
