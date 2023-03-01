@@ -14,7 +14,7 @@ import static java.util.stream.Collectors.toList;
 record MakeOrderRequest(
     @NotNull @UUID
     String customerId,
-    @Pattern(regexp = "USD|PLN|EUR")
+    @NotNull @Pattern(regexp = "USD|PLN|EUR")
     String orderCurrency,
     @NotEmpty @NotNull
     List<OrderItemDto> orderItems,

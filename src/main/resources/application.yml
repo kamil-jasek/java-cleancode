@@ -42,4 +42,7 @@ orders:
           value: 15.00
           currency: USD
 
+  email-recipients:
+    - test@somemail.com
+
 

@@ -1,0 +1,18 @@
+POST http://localhost:8080/api/orders
+Content-Type: application/json
+
+{
+  "customerId": "9c74dd58-83e3-4a21-8220-bec2ddcd590c",
+  "orderCurrency": "USD",
+  "orderItems": [
+    {
+      "productId": "87b899d8-3c87-4889-80e2-34b7d4ac0f53",
+      "price": "24.12",
+      "currency": "EUR",
+      "weight": 0.12,
+      "weightUnit": "KG",
+      "quantity": 2
+    }
+  ],
+  "discountCoupon": "ABC20"
+}

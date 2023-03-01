@@ -58,8 +58,7 @@ public class OrderServiceFacade {
             randomUUID(),
             Instant.now(clock),
             null,
-            OrderMade.from(order)
-        ));
+            OrderMade.from(order)));
         return new OrderConfirmation(order.id());
     }
 }
