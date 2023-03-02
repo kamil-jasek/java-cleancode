@@ -1,9 +1,8 @@
-package pl.sda.refactoring.controller;
+package pl.sda.refactoring.service;
 
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import pl.sda.refactoring.entity.*;
-import pl.sda.refactoring.service.*;
 import pl.sda.refactoring.service.DiscountService.Discount;
 import pl.sda.refactoring.service.OrderSettings.DiscountSettings;
 
