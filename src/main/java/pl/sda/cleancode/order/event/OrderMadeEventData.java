@@ -11,7 +11,7 @@ import java.util.UUID;
 
 import static java.util.stream.Collectors.toList;
 
-public record OrderMade(
+public record OrderMadeEventData(
     @NonNull UUID id,
     @NonNull UUID customerId,
     @NonNull Instant createTime,
@@ -33,8 +33,8 @@ public record OrderMade(
     ) {
     }
 
-    public static OrderMade from(Order order) {
-        return new OrderMade(
+    public static OrderMadeEventData from(Order order) {
+        return new OrderMadeEventData(
             order.id().id(),
             order.customerId().id(),
             order.createTime(),

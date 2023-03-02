@@ -3,13 +3,13 @@ package pl.sda.cleancode.order.service;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
-import pl.sda.cleancode.application.event.DomainEvent;
 import pl.sda.cleancode.application.event.DomainEventPublisher;
 import pl.sda.cleancode.order.command.MakeOrderCmd;
 import pl.sda.cleancode.order.domain.Order;
 import pl.sda.cleancode.order.domain.OrderConfirmation;
 import pl.sda.cleancode.order.domain.OrderId;
-import pl.sda.cleancode.order.event.OrderMade;
+import pl.sda.cleancode.order.event.OrderMadeEvent;
+import pl.sda.cleancode.order.event.OrderMadeEventData;
 import pl.sda.cleancode.order.exception.CustomerNotExistsException;
 import pl.sda.cleancode.order.infra.port.CustomerPort;
 import pl.sda.cleancode.order.infra.port.OrderRepoPort;
@@ -54,11 +54,11 @@ public class OrderServiceFacade {
             deliveryCost,
             discount);
         orderRepoPort.save(order);
-        eventPublisher.publish(new DomainEvent(
+        eventPublisher.publish(new OrderMadeEvent(
             randomUUID(),
             Instant.now(clock),
             null,
-            OrderMade.from(order)));
+            OrderMadeEventData.from(order)));
         return new OrderConfirmation(order.id());
     }
 }

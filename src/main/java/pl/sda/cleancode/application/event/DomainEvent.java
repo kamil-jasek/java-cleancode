@@ -1,15 +1,17 @@
 package pl.sda.cleancode.application.event;
 
-import lombok.NonNull;
+import lombok.*;
 
 import java.time.Instant;
 import java.util.UUID;
 
-public record DomainEvent(
-    @NonNull UUID eventId,
-    @NonNull Instant eventTime,
-    UUID correlationId,
-    @NonNull DomainEventData data
-) {
-
+@Getter
+@RequiredArgsConstructor
+@EqualsAndHashCode
+@ToString
+public abstract class DomainEvent<T extends DomainEventData> {
+    private final @NonNull UUID eventId;
+    private final @NonNull Instant eventTime;
+    private final UUID correlationId;
+    private final @NonNull T data;
 }

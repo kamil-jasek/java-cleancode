@@ -3,7 +3,7 @@ package pl.sda.cleancode.order.service;
 import org.junit.jupiter.api.Test;
 import pl.sda.cleancode.order.command.MakeOrderCmd;
 import pl.sda.cleancode.order.domain.*;
-import pl.sda.cleancode.order.event.OrderMade;
+import pl.sda.cleancode.order.event.OrderMadeEvent;
 import pl.sda.cleancode.order.exception.CustomerNotExistsException;
 import pl.sda.cleancode.order.infra.port.OrderRepoPort;
 
@@ -110,7 +110,7 @@ final class MakeOrderTest {
         // and order items discounted total price by 20% is 364.44 USD + delivery cost 20 USD is 384.44 USD
         assertThat(order.discountedTotalPrice()).isEqualTo(Price.of("384.60", USD));
         // and event about created order is published
-        assertThat(eventPublisher.hasPublished(OrderMade.class)).isTrue();
+        assertThat(eventPublisher.hasPublished(OrderMadeEvent.class)).isTrue();
     }
 
     @Test

@@ -17,6 +17,8 @@ import static pl.sda.cleancode.application.util.DomainArgumentCheck.check;
 public final class ExchangedOrderItemList {
     private final Currency baseCurrency;
     private final List<ExchangedOrderItem> orderItems;
+    private final Price totalPrice;
+    private final Weight totalWeight;
 
     public ExchangedOrderItemList(@NonNull Currency baseCurrency,
                                   @NonNull ExchangedOrderItem... orderItems) {
@@ -26,7 +28,15 @@ public final class ExchangedOrderItemList {
             .stream(orderItems)
             .toList();
         check(allExchangePricesMatchesBaseCurrency(),
-            "all order items must match currency: " + baseCurrency);
+            "all order items must match orderCurrency: " + baseCurrency);
+        totalPrice = this.orderItems
+            .stream()
+            .map(ExchangedOrderItem::fullPrice)
+            .reduce(new Price(ZERO, baseCurrency), Price::plus);
+        totalWeight = this.orderItems
+            .stream()
+            .map(ExchangedOrderItem::fullWeight)
+            .reduce(Weight.of(0, WeightUnit.GM), Weight::plus);
     }
 
     private boolean allExchangePricesMatchesBaseCurrency() {
@@ -36,16 +46,10 @@ public final class ExchangedOrderItemList {
     }
 
     public Price totalPrice() {
-        return orderItems
-            .stream()
-            .map(ExchangedOrderItem::fullPrice)
-            .reduce(new Price(ZERO, baseCurrency), Price::plus);
+        return totalPrice;
     }
 
     public Weight totalWeight() {
-        return orderItems
-            .stream()
-            .map(ExchangedOrderItem::fullWeight)
-            .reduce(Weight.of(0, WeightUnit.GM), Weight::plus);
+        return totalWeight;
     }
 }

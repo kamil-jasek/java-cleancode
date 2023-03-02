@@ -9,6 +9,6 @@ import java.util.List;
 public record OrderSettings(DiscountSettings discountSettings,
                             List<String> emailRecipients) {
 
-    record DiscountSettings(List<LocalDate> freeDeliveryDays) {
+    public record DiscountSettings(List<LocalDate> freeDeliveryDays) {
     }
 }

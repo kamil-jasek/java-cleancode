@@ -112,4 +112,70 @@ class OrderControllerTest {
                 }
                 """));
     }
+
+    @Test
+    @SneakyThrows
+    void test_invalid_order_parameters() {
+        // when post request is performed
+        mvc.perform(post("/api/orders")
+                .contentType(APPLICATION_JSON)
+                .content("""
+                    {
+                      "customerId": "???",
+                      "orderCurrency": "???",
+                      "orderItems": [
+                      ]
+                    }
+                    """))
+            // then expect response 201 and location header
+            .andExpect(status().isBadRequest())
+            .andExpect(content().json("""
+                {
+                  "errors": [
+                    "orderCurrency: must match \\"USD|EUR|PLN\\"",
+                    "orderItems: must not be empty",
+                    "customerId: must be a valid UUID"
+                  ]
+                }
+                """));
+    }
+
+    @Test
+    @SneakyThrows
+    void test_invalid_order_item_parameters() {
+        // when post request is performed
+        mvc.perform(post("/api/orders")
+                .contentType(APPLICATION_JSON)
+                .content("""
+                    {
+                      "customerId": "9c74dd58-83e3-4a21-8220-bec2ddcd590c",
+                      "orderCurrency": "USD",
+                      "orderItems": [
+                        {
+                          "productId": "???",
+                          "price": "-0.1",
+                          "currency": "???",
+                          "weight": -0.1,
+                          "weightUnit": "???",
+                          "quantity": 0
+                        }
+                      ],
+                      "discountCoupon": "ABC20"
+                    }
+                    """))
+            // then expect response 201 and location header
+            .andExpect(status().isBadRequest())
+            .andExpect(content().json("""
+                {
+                  "errors": [
+                    "orderItems[0].quantity: must be greater than or equal to 1",
+                    "orderItems[0].currency: must match \\"USD|EUR|PLN\\"",
+                    "orderItems[0].price: must be greater than or equal to 0",
+                    "orderItems[0].weight: must be greater than or equal to 0",
+                    "orderItems[0].weightUnit: must match \\"KG|GM|LB\\"",
+                    "orderItems[0].productId: must be a valid UUID"
+                  ]
+                }
+                """));
+    }
 }

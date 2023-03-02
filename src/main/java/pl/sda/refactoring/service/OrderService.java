@@ -9,12 +9,14 @@ import pl.sda.refactoring.entity.OrderItem;
 import pl.sda.refactoring.entity.OrderStatus;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import static java.math.RoundingMode.HALF_UP;
 import static java.util.UUID.randomUUID;
 
 @Service
@@ -65,7 +67,10 @@ public class OrderService {
                 var tp = BigDecimal.ZERO;
                 var twInGrams = 0;
                 for (var item : exchItems) {
-                    tp = tp.add(item.exchPrice().multiply(BigDecimal.valueOf(item.quantity())));
+                    tp = tp.add(item
+                            .exchPrice()
+                            .multiply(BigDecimal.valueOf(item.quantity())))
+                        .setScale(2, HALF_UP);
                     switch (item.weightUnit()) {
                         case GM -> twInGrams += item.weight();
                         case KG -> twInGrams += item.weight() * 1000;
@@ -89,7 +94,9 @@ public class OrderService {
                 if (coupon != null) {
                     var discount = discountService.getDiscount(coupon);
                     if (discount != null) {
-                        discountPrice = tp.multiply(BigDecimal.valueOf(discount.value()));
+                        discountPrice = tp
+                            .multiply(BigDecimal.valueOf(discount.value()))
+                            .setScale(2, HALF_UP);
                         discountService.deactivate(coupon, customerId);
                     }
                 }
@@ -107,8 +114,7 @@ public class OrderService {
                     .totalExch(tp)
                     .delivery(deliveryPrice)
                     .discount(discountPrice)
-                    .discountedTotal(tp.subtract(discountPrice))
-                    .discountedDeliveryTotal(tp.add(deliveryPrice))
+                    .discountedTotal(tp.add(deliveryPrice).subtract(discountPrice))
                     .build();
                 orderRepo.save(order);
                 sendEmail(order);
@@ -116,7 +122,6 @@ public class OrderService {
             } else {
                 throw new EmptyOrderItemsListException();
             }
-
         } else {
             throw new CustomerNotFoundException("customer not found " + customerId);
         }

@@ -37,7 +37,7 @@ public class OrderController {
                     .productId(UUID.fromString(item.productId()))
                     .price(item.price())
                     .currency(Currency.valueOf(item.currency()))
-                    .weight(item.weight())
+                    .weight(item.weight().doubleValue())
                     .weightUnit(WeightUnit.valueOf(item.weightUnit()))
                     .quantity(item.quantity())
                     .build())

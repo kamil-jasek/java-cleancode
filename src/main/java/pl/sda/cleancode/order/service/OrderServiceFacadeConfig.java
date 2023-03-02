@@ -4,10 +4,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import pl.sda.cleancode.application.event.DomainEventPublisher;
-import pl.sda.cleancode.order.infra.port.CustomerPort;
-import pl.sda.cleancode.order.infra.port.DiscountPort;
-import pl.sda.cleancode.order.infra.port.ExchangeCurrencyPort;
-import pl.sda.cleancode.order.infra.port.OrderRepoPort;
+import pl.sda.cleancode.order.infra.port.*;
 
 import java.time.Clock;
 import java.util.List;
@@ -43,5 +40,10 @@ class OrderServiceFacadeConfig {
         return new CompositeDiscountCalculator(List.of(
             new OneTimeCouponDiscountCalculator(discountPort),
             new FreeDeliveryDiscountCalculator(settings.freeDeliveryDays(), clock)));
+    }
+
+    @Bean
+    EmailNotificationEventHandler emailNotificationEventHandler(MailPort mailPort) {
+        return new EmailNotificationEventHandler(mailPort);
     }
 }

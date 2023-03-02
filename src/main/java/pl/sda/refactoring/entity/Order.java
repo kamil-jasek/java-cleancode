@@ -33,5 +33,4 @@ public class Order {
     private BigDecimal discount;
     private BigDecimal discountedTotal;
     private BigDecimal delivery;
-    private BigDecimal discountedDeliveryTotal;
 }
