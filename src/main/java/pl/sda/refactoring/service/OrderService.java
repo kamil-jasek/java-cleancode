@@ -77,16 +77,19 @@ public class OrderService {
                     }
                 }
                 var deliveryPrice = BigDecimal.ZERO;
-                if (tp.compareTo(new BigDecimal("400.00")) > 0 && twInGrams < 2000) {
+                // delivery costs are in USD
+                var tpInUsd = currencyService.exchange(tp, currency, Currency.USD);
+                if (tpInUsd.compareTo(new BigDecimal("400.00")) > 0 && twInGrams < 2000) {
                     deliveryPrice = new BigDecimal("0.00"); // free delivery
-                } else if (tp.compareTo(new BigDecimal("200.00")) > 0 && twInGrams < 1000) {
+                } else if (tpInUsd.compareTo(new BigDecimal("200.00")) > 0 && twInGrams < 1000) {
                     deliveryPrice = new BigDecimal("12.00"); // first level
-                } else if (tp.compareTo(new BigDecimal("100.00")) > 0 && twInGrams < 1000) {
+                } else if (tpInUsd.compareTo(new BigDecimal("100.00")) > 0 && twInGrams < 1000) {
                     deliveryPrice = new BigDecimal("15.00"); // second level
                 } else {
                     // default delivery
                     deliveryPrice = new BigDecimal("20.00");
                 }
+                deliveryPrice = currencyService.exchange(deliveryPrice, Currency.USD, currency);
 
                 // calculate discount
                 var discountPrice = BigDecimal.ZERO;

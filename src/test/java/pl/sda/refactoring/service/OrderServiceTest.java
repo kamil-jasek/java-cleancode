@@ -38,7 +38,12 @@ class OrderServiceTest {
         // given
         UUID customerId = UUID.fromString("f363c254-6bc3-440b-b120-4870999da0d9");
         when(customerService.exists(customerId)).thenReturn(true);
-        when(currencyService.exchange(any(), any(), any())).thenReturn(new BigDecimal("52.00"));
+        when(currencyService.exchange(eq(new BigDecimal("12.00")), eq(Currency.PLN), eq(Currency.USD)))
+            .thenReturn(new BigDecimal("52.00"));
+        when(currencyService.exchange(eq(new BigDecimal("104.00")), eq(Currency.USD), eq(Currency.USD)))
+            .thenReturn(new BigDecimal("104.00"));
+        when(currencyService.exchange(eq(new BigDecimal("15.00")), eq(Currency.USD), eq(Currency.USD)))
+            .thenReturn(new BigDecimal("15.00"));
         when(discountService.getDiscount(any())).thenReturn(new Discount(0.1));
 
         // when make order is executed
