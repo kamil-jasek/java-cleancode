@@ -47,6 +47,7 @@
 11. Inheritance must be designed.
 12. Prefer composition to inheritance.
 13. Write loosely coupled code, and use design patterns.
+14. EASILY UNDERSTANDABLE CODE ARCHITECTURE!!
 
 ## II. REFACTORING
 
