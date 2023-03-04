@@ -8,10 +8,13 @@ import pl.sda.refactoring.service.OrderSettings.DiscountSettings;
 import pl.sda.refactoring.service.command.MakeOrder;
 
 import java.math.BigDecimal;
+import java.time.Clock;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
+import static java.time.ZoneOffset.UTC;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -24,17 +27,21 @@ class OrderServiceTest {
     private final CustomerService customerService = mock(CustomerService.class);
     private final OrderRepo orderRepo = mock(OrderRepo.class);
     private final EmailService emailService = mock(EmailService.class);
+    private final Clock fixedClock = Clock.fixed(Instant.parse("2022-03-04T10:00:00Z"), UTC);
     private final OrderSettings orderSettings = new OrderSettings(
-        new DiscountSettings(List.of(LocalDate.now())),
+        new DiscountSettings(List.of(LocalDate.now(fixedClock))),
         List.of("test@test.pl"));
 
     private final OrderService orderService = new OrderService(
-        discountService,
-        currencyService,
+        new DeliveryPriceCalculator(currencyService),
         new CustomerValidator(customerService),
         orderRepo,
         emailService,
-        orderSettings);
+        orderSettings,
+        new OrderItemCurrencyExchanger(currencyService),
+        new DiscountPriceCalculator(discountService, orderSettings, fixedClock),
+        fixedClock);
+
 
     @Test
     void should_make_order() {
@@ -66,12 +73,13 @@ class OrderServiceTest {
         verify(orderRepo).save(orderCapture.capture());
         var order = orderCapture.getValue();
         assertThat(order).usingRecursiveComparison()
-            .ignoringFields("ctime", "items.id")
+            .ignoringFields("items.id")
             .isEqualTo(Order.builder()
                 .id(order.id())
                 .customerId(customerId)
                 .status(OrderStatus.CONFIRMED)
                 .currency(Currency.USD)
+                .ctime(fixedClock.instant())
                 .items(List.of(
                     OrderItem.builder()
                         .productId(UUID.fromString("50df82ab-f553-4c53-83c2-0bf993ffaab9"))
