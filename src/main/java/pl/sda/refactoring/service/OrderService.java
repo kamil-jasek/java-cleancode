@@ -47,7 +47,7 @@ public class OrderService {
     }
 
     public UUID handle(MakeOrder cmd) {
-        customerValidator.assertCustomerExists(cmd);
+        customerValidator.assertCustomerExists(cmd.customerId());
         final var exchangedItems = exchangeCurrenciesInItems(cmd.orderItems(), cmd.baseCurrency());
         final var totalPrice = totalPrice(exchangedItems);
         final var totalWeightInGrams = totalWeightInGrams(exchangedItems);
