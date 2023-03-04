@@ -31,7 +31,7 @@ class OrderServiceTest {
     private final OrderService orderService = new OrderService(
         discountService,
         currencyService,
-        customerService,
+        new CustomerValidator(customerService),
         orderRepo,
         emailService,
         orderSettings);

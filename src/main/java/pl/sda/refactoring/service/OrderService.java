@@ -25,21 +25,21 @@ public class OrderService {
 
     private final DiscountService discountService;
     private final CurrencyService currencyService;
-    private final CustomerService customerService;
     private final OrderRepo orderRepo;
     private final EmailService emailService;
     private final List<LocalDate> freeDeliveryDays;
     private final List<String> emailRecipients;
+    private final CustomerValidator customerValidator;
 
     public OrderService(@NonNull DiscountService discountService,
                         @NonNull CurrencyService currencyService,
-                        @NonNull CustomerService customerService,
+                        @NonNull CustomerValidator customerValidator,
                         @NonNull OrderRepo orderRepo,
                         @NonNull EmailService emailService,
                         @NonNull OrderSettings settings) {
         this.discountService = discountService;
         this.currencyService = currencyService;
-        this.customerService = customerService;
+        this.customerValidator = customerValidator;
         this.orderRepo = orderRepo;
         this.emailService = emailService;
         this.freeDeliveryDays = settings.discountSettings().freeDeliveryDays();
@@ -47,7 +47,7 @@ public class OrderService {
     }
 
     public UUID handle(MakeOrder cmd) {
-        assertCustomerExists(cmd);
+        customerValidator.assertCustomerExists(cmd);
         final var exchangedItems = exchangeCurrenciesInItems(cmd.orderItems(), cmd.baseCurrency());
         final var totalPrice = totalPrice(exchangedItems);
         final var totalWeightInGrams = totalWeightInGrams(exchangedItems);
@@ -145,12 +145,6 @@ public class OrderService {
                 .exchPrice(currencyService.exchange(item.price(), item.currency(), baseCurrency))
                 .build())
             .collect(toList());
-    }
-
-    private void assertCustomerExists(MakeOrder cmd) {
-        if (!customerService.exists(cmd.customerId())) {
-            throw new CustomerNotFoundException("customer not found " + cmd.customerId());
-        }
     }
 
     private void sendEmail(Order order) {
