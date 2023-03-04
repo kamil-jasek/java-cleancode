@@ -46,7 +46,7 @@ class OrderControllerTest {
     void test_make_order() {
         // given customer exists
         when(customerService.exists(any())).thenReturn(true);
-        // given currency service working
+        // given baseCurrency service working
         when(currencyService.exchange(any(), any(), any())).thenReturn(new BigDecimal("20.00"));
         // given discount coupon exists
         when(discountService.getDiscount(any())).thenReturn(new Discount(0.1));

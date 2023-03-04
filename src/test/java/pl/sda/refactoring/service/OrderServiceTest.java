@@ -5,13 +5,16 @@ import org.mockito.ArgumentCaptor;
 import pl.sda.refactoring.entity.*;
 import pl.sda.refactoring.service.DiscountService.Discount;
 import pl.sda.refactoring.service.OrderSettings.DiscountSettings;
+import pl.sda.refactoring.service.command.MakeOrder;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
+import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
 class OrderServiceTest {
@@ -47,18 +50,15 @@ class OrderServiceTest {
         when(discountService.getDiscount(any())).thenReturn(new Discount(0.1));
 
         // when make order is executed
-        UUID id = orderService.makeOrder(
-            customerId,
-            List.of(OrderItem.builder()
+        UUID id = orderService.handle(
+            new MakeOrder(customerId, List.of(OrderItem.builder()
                 .productId(UUID.fromString("50df82ab-f553-4c53-83c2-0bf993ffaab9"))
                 .price(new BigDecimal("12.00"))
                 .currency(Currency.PLN)
                 .weight(0.2)
                 .weightUnit(WeightUnit.KG)
                 .quantity(2)
-                .build()),
-            Currency.USD,
-            "ABC20");
+                .build()), Currency.USD, "ABC20"));
 
         // then
         assertThat(id).isNotNull();
@@ -89,5 +89,15 @@ class OrderServiceTest {
                 .discountedTotal(new BigDecimal("93.60"))
                 .build());
         verify(emailService).send(any(), any(), any());
+    }
+
+    @Test
+    void should_fail_if_empty_order_item_list() {
+        // expect error
+        assertThrows(EmptyOrderItemsListException.class, () ->
+            new MakeOrder(UUID.randomUUID(),
+                emptyList(),
+                Currency.USD,
+                "ABC20"));
     }
 }
