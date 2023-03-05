@@ -5,6 +5,9 @@ import org.mockito.ArgumentCaptor;
 import pl.sda.refactoring.entity.*;
 import pl.sda.refactoring.service.OrderSettings.DiscountSettings;
 import pl.sda.refactoring.service.command.MakeOrder;
+import pl.sda.refactoring.service.domain.Currency;
+import pl.sda.refactoring.service.domain.OrderStatus;
+import pl.sda.refactoring.service.domain.WeightUnit;
 import pl.sda.refactoring.service.port.CurrencyExchangerPort;
 
 import java.math.BigDecimal;
@@ -50,7 +53,7 @@ class OrderServiceTest {
 
         // when make order is executed
         UUID id = orderService.handle(
-            new MakeOrder(customerId, List.of(OrderItem.builder()
+            new MakeOrder(customerId, List.of(OrderItemEntity.builder()
                 .productId(UUID.fromString("50df82ab-f553-4c53-83c2-0bf993ffaab9"))
                 .price(new BigDecimal("12.00"))
                 .currency(Currency.PLN)
@@ -61,19 +64,19 @@ class OrderServiceTest {
 
         // then
         assertThat(id).isNotNull();
-        var orderCapture = ArgumentCaptor.forClass(Order.class);
+        var orderCapture = ArgumentCaptor.forClass(OrderEntity.class);
         verify(orderRepo).save(orderCapture.capture());
         var order = orderCapture.getValue();
         assertThat(order).usingRecursiveComparison()
             .ignoringFields("items.id")
-            .isEqualTo(Order.builder()
+            .isEqualTo(OrderEntity.builder()
                 .id(order.id())
                 .customerId(customerId)
                 .status(OrderStatus.CONFIRMED)
                 .currency(Currency.USD)
                 .ctime(fixedClock.instant())
                 .items(List.of(
-                    OrderItem.builder()
+                    OrderItemEntity.builder()
                         .productId(UUID.fromString("50df82ab-f553-4c53-83c2-0bf993ffaab9"))
                         .price(new BigDecimal("12.00"))
                         .currency(Currency.PLN)

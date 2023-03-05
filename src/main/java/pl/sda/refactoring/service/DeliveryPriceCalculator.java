@@ -3,7 +3,7 @@ package pl.sda.refactoring.service;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import pl.sda.refactoring.entity.Currency;
+import pl.sda.refactoring.service.domain.Currency;
 import pl.sda.refactoring.service.port.CurrencyExchangerPort;
 
 import java.math.BigDecimal;

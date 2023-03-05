@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import pl.sda.refactoring.service.domain.Currency;
+import pl.sda.refactoring.service.domain.OrderStatus;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -17,7 +19,7 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Order {
+public class OrderEntity {
 
     @Id
     private UUID id;
@@ -28,7 +30,7 @@ public class Order {
     @Enumerated(EnumType.STRING)
     private Currency currency;
     @OneToMany(cascade = CascadeType.ALL)
-    private List<OrderItem> items;
+    private List<OrderItemEntity> items;
     private BigDecimal totalExch;
     private BigDecimal discount;
     private BigDecimal discountedTotal;

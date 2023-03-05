@@ -1,6 +1,6 @@
 package pl.sda.refactoring.service.port;
 
-import pl.sda.refactoring.entity.Currency;
+import pl.sda.refactoring.service.domain.Currency;
 
 import java.math.BigDecimal;
 

@@ -1,7 +1,7 @@
 package pl.sda.refactoring.service.port.adapter.currency;
 
 import org.springframework.stereotype.Service;
-import pl.sda.refactoring.entity.Currency;
+import pl.sda.refactoring.service.domain.Currency;
 import pl.sda.refactoring.service.InfrastructureException;
 import pl.sda.refactoring.service.port.CurrencyExchangerPort;
 

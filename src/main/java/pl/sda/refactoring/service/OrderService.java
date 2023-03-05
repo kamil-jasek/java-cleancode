@@ -3,9 +3,9 @@ package pl.sda.refactoring.service;
 import lombok.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import pl.sda.refactoring.entity.Order;
-import pl.sda.refactoring.entity.OrderItem;
-import pl.sda.refactoring.entity.OrderStatus;
+import pl.sda.refactoring.entity.OrderEntity;
+import pl.sda.refactoring.entity.OrderItemEntity;
+import pl.sda.refactoring.service.domain.OrderStatus;
 import pl.sda.refactoring.service.command.MakeOrder;
 
 import java.math.BigDecimal;
@@ -63,7 +63,7 @@ public class OrderService {
             deliveryPrice,
             cmd.coupon(),
             cmd.customerId());
-        final var order = Order.builder()
+        final var order = OrderEntity.builder()
             .id(randomUUID())
             .ctime(clock.instant())
             .currency(cmd.baseCurrency())
@@ -80,7 +80,7 @@ public class OrderService {
         return order.id();
     }
 
-    private static int totalWeightInGrams(List<OrderItem> exchangedItems) {
+    private static int totalWeightInGrams(List<OrderItemEntity> exchangedItems) {
         int twInGrams = 0;
         for (var item : exchangedItems) {
             switch (item.weightUnit()) {
@@ -92,7 +92,7 @@ public class OrderService {
         return twInGrams;
     }
 
-    private static BigDecimal totalPrice(List<OrderItem> exchangedItems) {
+    private static BigDecimal totalPrice(List<OrderItemEntity> exchangedItems) {
         BigDecimal tp = BigDecimal.ZERO;
         for (var item : exchangedItems) {
             tp = tp.add(item
@@ -103,7 +103,7 @@ public class OrderService {
         return tp;
     }
 
-    private void sendEmail(Order order) {
+    private void sendEmail(OrderEntity order) {
         emailService.send(
             "New order confirmed: " + order.id(),
             """

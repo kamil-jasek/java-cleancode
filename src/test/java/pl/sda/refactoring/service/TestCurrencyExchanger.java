@@ -1,14 +1,14 @@
 package pl.sda.refactoring.service;
 
-import pl.sda.refactoring.entity.Currency;
+import pl.sda.refactoring.service.domain.Currency;
 import pl.sda.refactoring.service.port.CurrencyExchangerPort;
 
 import java.math.BigDecimal;
 import java.util.Map;
 
 import static java.math.RoundingMode.HALF_UP;
-import static pl.sda.refactoring.entity.Currency.PLN;
-import static pl.sda.refactoring.entity.Currency.USD;
+import static pl.sda.refactoring.service.domain.Currency.PLN;
+import static pl.sda.refactoring.service.domain.Currency.USD;
 
 final class TestCurrencyExchanger implements CurrencyExchangerPort {
 

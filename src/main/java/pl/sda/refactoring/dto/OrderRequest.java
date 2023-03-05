@@ -5,9 +5,9 @@ import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import org.hibernate.validator.constraints.UUID;
-import pl.sda.refactoring.entity.Currency;
-import pl.sda.refactoring.entity.OrderItem;
-import pl.sda.refactoring.entity.WeightUnit;
+import pl.sda.refactoring.service.domain.Currency;
+import pl.sda.refactoring.entity.OrderItemEntity;
+import pl.sda.refactoring.service.domain.WeightUnit;
 import pl.sda.refactoring.service.command.MakeOrder;
 
 import java.util.List;
@@ -24,7 +24,7 @@ public record OrderRequest(
         return new MakeOrder(
             java.util.UUID.fromString(customerId()),
             orderItems().stream()
-                .map(item -> OrderItem.builder()
+                .map(item -> OrderItemEntity.builder()
                     .productId(java.util.UUID.fromString(item.productId()))
                     .price(item.price())
                     .currency(Currency.valueOf(item.currency()))
