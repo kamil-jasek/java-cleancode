@@ -14,12 +14,7 @@ import static java.util.stream.Collectors.toList;
 final class JpaOrderRepo implements OrderRepoPort {
 
     private final OrderRepo orderRepo;
-
-    @Override
-    public void save(OrderEntity orderEntity) {
-        orderRepo.save(orderEntity);
-    }
-
+    
     @Override
     public void save(Order order) {
         orderRepo.save(toEntity(order));

@@ -53,10 +53,10 @@ public class OrderService {
             cmd.baseCurrency());
         final var deliveryPrice = deliveryPriceCalculator.calculateDeliveryPrice(exchangedItems);
         final var discountPrice = discountPriceCalculator.calculateDiscountPrice(
-            exchangedItems.totalPrice(),
-            deliveryPrice,
-            cmd.coupon(),
-            cmd.customerId());
+            new DiscountContext(cmd.customerId(),
+                exchangedItems.totalPrice(),
+                deliveryPrice,
+                cmd.coupon()));
         final var order = new Order(
             new OrderId(UUID.randomUUID()),
             new CreateTime(Instant.now(clock)),

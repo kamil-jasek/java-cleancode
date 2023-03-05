@@ -35,6 +35,9 @@ class OrderServiceTest {
         new DiscountSettings(List.of(LocalDate.now(fixedClock))),
         List.of("test@test.pl"));
 
+    private final DiscountPriceCalculator discountPriceCalculator = new DiscountPriceCalculatorConfig()
+        .discountPriceCalculator(new TestDiscountService(), orderSettings, fixedClock);
+
     private final OrderService orderService = new OrderService(
         new DeliveryPriceCalculator(currencyExchanger),
         new CustomerValidator(new TestCustomerDatabase()),
@@ -42,10 +45,7 @@ class OrderServiceTest {
         emailService,
         orderSettings,
         new OrderItemCurrencyExchanger(currencyExchanger),
-        new DiscountPriceCalculator(
-            new TestDiscountService(),
-            orderSettings,
-            fixedClock),
+        discountPriceCalculator,
         fixedClock);
 
     @Test
