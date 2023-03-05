@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import pl.sda.refactoring.entity.Currency;
 import pl.sda.refactoring.entity.OrderItem;
+import pl.sda.refactoring.service.port.CurrencyExchangerPort;
 
 import java.util.List;
 import java.util.UUID;
@@ -14,7 +15,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 final class OrderItemCurrencyExchanger {
 
-    private final CurrencyService currencyService;
+    private final CurrencyExchangerPort currencyExchanger;
 
     List<OrderItem> exchangeCurrenciesInItems(@NonNull List<OrderItem> orderItems,
                                               @NonNull Currency baseCurrency) {
@@ -22,7 +23,7 @@ final class OrderItemCurrencyExchanger {
             .stream()
             .map(item -> item.toBuilder()
                 .id(UUID.randomUUID())
-                .exchPrice(currencyService.exchange(item.price(), item.currency(), baseCurrency))
+                .exchPrice(currencyExchanger.exchange(item.price(), item.currency(), baseCurrency))
                 .build())
             .collect(Collectors.toList());
     }

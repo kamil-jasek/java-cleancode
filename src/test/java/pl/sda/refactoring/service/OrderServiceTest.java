@@ -6,6 +6,7 @@ import pl.sda.refactoring.entity.*;
 import pl.sda.refactoring.service.DiscountService.Discount;
 import pl.sda.refactoring.service.OrderSettings.DiscountSettings;
 import pl.sda.refactoring.service.command.MakeOrder;
+import pl.sda.refactoring.service.port.CurrencyExchangerPort;
 
 import java.math.BigDecimal;
 import java.time.Clock;
@@ -23,7 +24,7 @@ import static org.mockito.Mockito.*;
 class OrderServiceTest {
 
     private final DiscountService discountService = mock(DiscountService.class);
-    private final CurrencyService currencyService = mock(CurrencyService.class);
+    private final CurrencyExchangerPort currencyExchanger = new TestCurrencyExchanger();
     private final CustomerService customerService = mock(CustomerService.class);
     private final OrderRepo orderRepo = mock(OrderRepo.class);
     private final EmailService emailService = mock(EmailService.class);
@@ -33,27 +34,20 @@ class OrderServiceTest {
         List.of("test@test.pl"));
 
     private final OrderService orderService = new OrderService(
-        new DeliveryPriceCalculator(currencyService),
+        new DeliveryPriceCalculator(currencyExchanger),
         new CustomerValidator(customerService),
         orderRepo,
         emailService,
         orderSettings,
-        new OrderItemCurrencyExchanger(currencyService),
+        new OrderItemCurrencyExchanger(currencyExchanger),
         new DiscountPriceCalculator(discountService, orderSettings, fixedClock),
         fixedClock);
-
 
     @Test
     void should_make_order() {
         // given
         UUID customerId = UUID.fromString("f363c254-6bc3-440b-b120-4870999da0d9");
         when(customerService.exists(customerId)).thenReturn(true);
-        when(currencyService.exchange(eq(new BigDecimal("12.00")), eq(Currency.PLN), eq(Currency.USD)))
-            .thenReturn(new BigDecimal("52.00"));
-        when(currencyService.exchange(eq(new BigDecimal("104.00")), eq(Currency.USD), eq(Currency.USD)))
-            .thenReturn(new BigDecimal("104.00"));
-        when(currencyService.exchange(eq(new BigDecimal("15.00")), eq(Currency.USD), eq(Currency.USD)))
-            .thenReturn(new BigDecimal("15.00"));
         when(discountService.getDiscount(any())).thenReturn(new Discount(0.1));
 
         // when make order is executed

@@ -1,12 +1,15 @@
-package pl.sda.refactoring.service;
+package pl.sda.refactoring.service.port.adapter.currency;
 
 import org.springframework.stereotype.Service;
 import pl.sda.refactoring.entity.Currency;
+import pl.sda.refactoring.service.InfrastructureException;
+import pl.sda.refactoring.service.port.CurrencyExchangerPort;
 
 import java.math.BigDecimal;
 
 @Service
-public class CurrencyService {
+final class NbpCurrencyExchanger implements CurrencyExchangerPort {
+    @Override
     public BigDecimal exchange(BigDecimal price, Currency original, Currency target) {
         throw new InfrastructureException("baseCurrency service failure");
     }

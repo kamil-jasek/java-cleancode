@@ -7,7 +7,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.servlet.MockMvc;
-import pl.sda.refactoring.service.CurrencyService;
+import pl.sda.refactoring.service.port.CurrencyExchangerPort;
 import pl.sda.refactoring.service.CustomerService;
 import pl.sda.refactoring.service.DiscountService;
 import pl.sda.refactoring.service.DiscountService.Discount;
@@ -33,7 +33,7 @@ class OrderControllerTest {
     private CustomerService customerService;
 
     @MockBean
-    private CurrencyService currencyService;
+    private CurrencyExchangerPort currencyExchanger;
 
     @MockBean
     private DiscountService discountService;
@@ -47,7 +47,7 @@ class OrderControllerTest {
         // given customer exists
         when(customerService.exists(any())).thenReturn(true);
         // given baseCurrency service working
-        when(currencyService.exchange(any(), any(), any())).thenReturn(new BigDecimal("20.00"));
+        when(currencyExchanger.exchange(any(), any(), any())).thenReturn(new BigDecimal("20.00"));
         // given discount coupon exists
         when(discountService.getDiscount(any())).thenReturn(new Discount(0.1));
 
