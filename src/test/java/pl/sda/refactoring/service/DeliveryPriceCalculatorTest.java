@@ -1,8 +1,9 @@
 package pl.sda.refactoring.service;
 
 import org.junit.jupiter.api.Test;
-import pl.sda.refactoring.service.DiscountService.Discount;
 import pl.sda.refactoring.service.OrderSettings.DiscountSettings;
+import pl.sda.refactoring.service.port.DiscountPort;
+import pl.sda.refactoring.service.port.DiscountPort.Discount;
 
 import java.math.BigDecimal;
 import java.time.Clock;
@@ -19,10 +20,10 @@ import static org.mockito.Mockito.when;
 
 class DeliveryPriceCalculatorTest {
 
-    private final DiscountService discountService = mock(DiscountService.class);
+    private final DiscountPort discountPort = mock(DiscountPort.class);
     private final Clock fixed = Clock.fixed(Instant.parse("2022-03-04T10:00:00Z"), UTC);
     private final DiscountPriceCalculator calculator = new DiscountPriceCalculator(
-        discountService,
+        discountPort,
         new OrderSettings(
             new DiscountSettings(List.of(LocalDate.now(fixed))),
             List.of()
@@ -32,7 +33,7 @@ class DeliveryPriceCalculatorTest {
     @Test
     void should_calculate_free_delivery() {
         // given
-        when(discountService.getDiscount(anyString())).thenReturn(new Discount(0.1));
+        when(discountPort.getDiscount(anyString())).thenReturn(new Discount(0.1));
         final var totalPrice = new BigDecimal("200.00");
         final var deliveryPrice = new BigDecimal("20.00");
 

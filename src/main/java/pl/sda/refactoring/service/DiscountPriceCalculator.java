@@ -2,6 +2,7 @@ package pl.sda.refactoring.service;
 
 import lombok.NonNull;
 import org.springframework.stereotype.Component;
+import pl.sda.refactoring.service.port.DiscountPort;
 
 import java.math.BigDecimal;
 import java.time.Clock;
@@ -13,14 +14,14 @@ import static java.math.RoundingMode.HALF_UP;
 
 @Component
 public class DiscountPriceCalculator {
-    private final DiscountService discountService;
+    private final DiscountPort discountPort;
     private final List<LocalDate> freeDeliveryDays;
     private final Clock clock;
 
-    DiscountPriceCalculator(@NonNull DiscountService discountService,
+    DiscountPriceCalculator(@NonNull DiscountPort discountPort,
                             @NonNull OrderSettings settings,
                             @NonNull Clock clock) {
-        this.discountService = discountService;
+        this.discountPort = discountPort;
         this.freeDeliveryDays = settings.discountSettings().freeDeliveryDays();
         this.clock = clock;
     }
@@ -31,12 +32,12 @@ public class DiscountPriceCalculator {
                                       @NonNull UUID customerId) {
         var discountPrice = BigDecimal.ZERO;
         if (coupon != null) {
-            var discount = discountService.getDiscount(coupon);
+            var discount = discountPort.getDiscount(coupon);
             if (discount != null) {
                 discountPrice = totalPrice
                     .multiply(BigDecimal.valueOf(discount.value()))
                     .setScale(2, HALF_UP);
-                discountService.deactivate(coupon, customerId);
+                discountPort.deactivate(coupon, customerId);
             }
         }
         if (freeDeliveryDays.contains(LocalDate.now(clock))) {

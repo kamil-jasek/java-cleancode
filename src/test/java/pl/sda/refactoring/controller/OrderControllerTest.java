@@ -8,9 +8,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.servlet.MockMvc;
 import pl.sda.refactoring.service.port.CurrencyExchangerPort;
-import pl.sda.refactoring.service.CustomerService;
-import pl.sda.refactoring.service.DiscountService;
-import pl.sda.refactoring.service.DiscountService.Discount;
+import pl.sda.refactoring.service.port.CustomerPort;
+import pl.sda.refactoring.service.port.DiscountPort;
+import pl.sda.refactoring.service.port.DiscountPort.Discount;
 import pl.sda.refactoring.service.EmailService;
 
 import java.math.BigDecimal;
@@ -30,13 +30,13 @@ class OrderControllerTest {
     private MockMvc mvc;
 
     @MockBean
-    private CustomerService customerService;
+    private CustomerPort customerDatabase;
 
     @MockBean
     private CurrencyExchangerPort currencyExchanger;
 
     @MockBean
-    private DiscountService discountService;
+    private DiscountPort discountPort;
 
     @MockBean
     private EmailService emailService;
@@ -45,11 +45,11 @@ class OrderControllerTest {
     @SneakyThrows
     void test_make_order() {
         // given customer exists
-        when(customerService.exists(any())).thenReturn(true);
+        when(customerDatabase.exists(any())).thenReturn(true);
         // given baseCurrency service working
         when(currencyExchanger.exchange(any(), any(), any())).thenReturn(new BigDecimal("20.00"));
         // given discount coupon exists
-        when(discountService.getDiscount(any())).thenReturn(new Discount(0.1));
+        when(discountPort.getDiscount(any())).thenReturn(new Discount(0.1));
 
         // when post request is performed
         mvc.perform(post("/api/orders")
@@ -82,7 +82,7 @@ class OrderControllerTest {
     @SneakyThrows
     void test_customer_not_exists() {
         // given customer not exists
-        when(customerService.exists(any())).thenReturn(false);
+        when(customerDatabase.exists(any())).thenReturn(false);
 
         // when post request is performed
         mvc.perform(post("/api/orders")

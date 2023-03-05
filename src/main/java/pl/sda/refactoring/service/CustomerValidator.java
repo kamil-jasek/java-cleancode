@@ -3,6 +3,7 @@ package pl.sda.refactoring.service;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import pl.sda.refactoring.service.port.CustomerPort;
 
 import java.util.UUID;
 
@@ -10,10 +11,10 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class CustomerValidator {
 
-    private final CustomerService customerService;
+    private final CustomerPort customerPort;
 
     void assertCustomerExists(@NonNull UUID customerId) {
-        if (!customerService.exists(customerId)) {
+        if (!customerPort.exists(customerId)) {
             throw new CustomerNotFoundException("customer not found " + customerId);
         }
     }

@@ -3,7 +3,6 @@ package pl.sda.refactoring.service;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import pl.sda.refactoring.entity.*;
-import pl.sda.refactoring.service.DiscountService.Discount;
 import pl.sda.refactoring.service.OrderSettings.DiscountSettings;
 import pl.sda.refactoring.service.command.MakeOrder;
 import pl.sda.refactoring.service.port.CurrencyExchangerPort;
@@ -23,9 +22,7 @@ import static org.mockito.Mockito.*;
 
 class OrderServiceTest {
 
-    private final DiscountService discountService = mock(DiscountService.class);
     private final CurrencyExchangerPort currencyExchanger = new TestCurrencyExchanger();
-    private final CustomerService customerService = mock(CustomerService.class);
     private final OrderRepo orderRepo = mock(OrderRepo.class);
     private final EmailService emailService = mock(EmailService.class);
     private final Clock fixedClock = Clock.fixed(Instant.parse("2022-03-04T10:00:00Z"), UTC);
@@ -35,20 +32,21 @@ class OrderServiceTest {
 
     private final OrderService orderService = new OrderService(
         new DeliveryPriceCalculator(currencyExchanger),
-        new CustomerValidator(customerService),
+        new CustomerValidator(new TestCustomerDatabase()),
         orderRepo,
         emailService,
         orderSettings,
         new OrderItemCurrencyExchanger(currencyExchanger),
-        new DiscountPriceCalculator(discountService, orderSettings, fixedClock),
+        new DiscountPriceCalculator(
+            new TestDiscountService(),
+            orderSettings,
+            fixedClock),
         fixedClock);
 
     @Test
     void should_make_order() {
         // given
         UUID customerId = UUID.fromString("f363c254-6bc3-440b-b120-4870999da0d9");
-        when(customerService.exists(customerId)).thenReturn(true);
-        when(discountService.getDiscount(any())).thenReturn(new Discount(0.1));
 
         // when make order is executed
         UUID id = orderService.handle(
