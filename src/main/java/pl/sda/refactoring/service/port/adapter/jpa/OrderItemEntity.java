@@ -1,4 +1,4 @@
-package pl.sda.refactoring.entity;
+package pl.sda.refactoring.service.port.adapter.jpa;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -19,7 +19,7 @@ import java.util.UUID;
 @Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
-public class OrderItemEntity {
+class OrderItemEntity {
 
     @Id
     private UUID id;

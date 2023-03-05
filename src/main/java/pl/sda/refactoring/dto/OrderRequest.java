@@ -5,13 +5,12 @@ import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import org.hibernate.validator.constraints.UUID;
-import pl.sda.refactoring.service.domain.Currency;
-import pl.sda.refactoring.entity.OrderItemEntity;
-import pl.sda.refactoring.service.domain.WeightUnit;
 import pl.sda.refactoring.service.command.MakeOrder;
+import pl.sda.refactoring.service.domain.*;
 
 import java.util.List;
 
+import static java.util.UUID.fromString;
 import static java.util.stream.Collectors.toList;
 
 public record OrderRequest(
@@ -22,18 +21,16 @@ public record OrderRequest(
 ) {
     public MakeOrder toCommand() {
         return new MakeOrder(
-            java.util.UUID.fromString(customerId()),
+            CustomerId.of(customerId),
             orderItems().stream()
-                .map(item -> OrderItemEntity.builder()
-                    .productId(java.util.UUID.fromString(item.productId()))
-                    .price(item.price())
-                    .currency(Currency.valueOf(item.currency()))
-                    .weight(item.weight().doubleValue())
-                    .weightUnit(WeightUnit.valueOf(item.weightUnit()))
-                    .quantity(item.quantity())
-                    .build())
+                .map(item -> new OrderItem(
+                    new ProductId(fromString(item.productId())),
+                    new Price(item.price(), Currency.valueOf(item.currency())),
+                    new Weight(item.weight().doubleValue(), WeightUnit.valueOf(item.weightUnit())),
+                    new Quantity(item.quantity())
+                ))
                 .collect(toList()),
-            Currency.valueOf(orderCurrency()),
-            discountCoupon());
+            Currency.valueOf(orderCurrency),
+            discountCoupon);
     }
 }

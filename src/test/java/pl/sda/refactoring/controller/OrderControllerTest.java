@@ -5,8 +5,15 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Primary;
 import org.springframework.test.web.servlet.MockMvc;
+import pl.sda.refactoring.service.TestCurrencyExchanger;
+import pl.sda.refactoring.service.TestCustomerDatabase;
+import pl.sda.refactoring.service.TestDiscountService;
 import pl.sda.refactoring.service.port.CurrencyExchangerPort;
 import pl.sda.refactoring.service.port.CustomerPort;
 import pl.sda.refactoring.service.port.DiscountPort;
@@ -24,33 +31,37 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@Import({OrderControllerTest.Config.class})
 class OrderControllerTest {
 
     @Autowired
     private MockMvc mvc;
 
     @MockBean
-    private CustomerPort customerDatabase;
-
-    @MockBean
-    private CurrencyExchangerPort currencyExchanger;
-
-    @MockBean
-    private DiscountPort discountPort;
-
-    @MockBean
     private EmailService emailService;
+
+    @TestConfiguration
+    static class Config {
+
+        @Bean @Primary
+        CustomerPort customerPort() {
+            return new TestCustomerDatabase();
+        }
+
+        @Bean @Primary
+        CurrencyExchangerPort exchangerPort() {
+            return new TestCurrencyExchanger();
+        }
+
+        @Bean @Primary
+        DiscountPort discountPort() {
+            return new TestDiscountService();
+        }
+    }
 
     @Test
     @SneakyThrows
     void test_make_order() {
-        // given customer exists
-        when(customerDatabase.exists(any())).thenReturn(true);
-        // given baseCurrency service working
-        when(currencyExchanger.exchange(any(), any(), any())).thenReturn(new BigDecimal("20.00"));
-        // given discount coupon exists
-        when(discountPort.getDiscount(any())).thenReturn(new Discount(0.1));
-
         // when post request is performed
         mvc.perform(post("/api/orders")
                 .contentType(APPLICATION_JSON)
@@ -62,7 +73,7 @@ class OrderControllerTest {
                         {
                           "productId": "87b899d8-3c87-4889-80e2-34b7d4ac0f53",
                           "price": "24.12",
-                          "currency": "EUR",
+                          "currency": "PLN",
                           "weight": 0.12,
                           "weightUnit": "KG",
                           "quantity": 2
@@ -81,21 +92,18 @@ class OrderControllerTest {
     @Test
     @SneakyThrows
     void test_customer_not_exists() {
-        // given customer not exists
-        when(customerDatabase.exists(any())).thenReturn(false);
-
         // when post request is performed
         mvc.perform(post("/api/orders")
                 .contentType(APPLICATION_JSON)
                 .content("""
                     {
-                      "customerId": "9c74dd58-83e3-4a21-8220-bec2ddcd590c",
+                      "customerId": "4515f6f1-7105-41b4-b89d-795cde1d6a0b",
                       "orderCurrency": "USD",
                       "orderItems": [
                         {
                           "productId": "87b899d8-3c87-4889-80e2-34b7d4ac0f53",
                           "price": "24.12",
-                          "currency": "EUR",
+                          "currency": "PLN",
                           "weight": 0.12,
                           "weightUnit": "KG",
                           "quantity": 2
@@ -108,7 +116,7 @@ class OrderControllerTest {
             .andExpect(status().isBadRequest())
             .andExpect(content().json("""
                 {
-                  "message": "customer not found 9c74dd58-83e3-4a21-8220-bec2ddcd590c"
+                  "message": "customer not found 4515f6f1-7105-41b4-b89d-795cde1d6a0b"
                 }
                 """));
     }

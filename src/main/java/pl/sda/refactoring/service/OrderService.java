@@ -3,24 +3,23 @@ package pl.sda.refactoring.service;
 import lombok.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import pl.sda.refactoring.entity.OrderEntity;
-import pl.sda.refactoring.entity.OrderItemEntity;
-import pl.sda.refactoring.service.domain.OrderStatus;
 import pl.sda.refactoring.service.command.MakeOrder;
+import pl.sda.refactoring.service.domain.CreateTime;
+import pl.sda.refactoring.service.domain.Order;
+import pl.sda.refactoring.service.domain.OrderId;
+import pl.sda.refactoring.service.domain.OrderStatus;
+import pl.sda.refactoring.service.port.OrderRepoPort;
 
-import java.math.BigDecimal;
 import java.time.Clock;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
-
-import static java.math.RoundingMode.HALF_UP;
-import static java.util.UUID.randomUUID;
 
 @Service
 @Transactional
 public class OrderService {
 
-    private final OrderRepo orderRepo;
+    private final OrderRepoPort orderRepoPort;
     private final EmailService emailService;
     private final List<String> emailRecipients;
     private final CustomerValidator customerValidator;
@@ -31,7 +30,7 @@ public class OrderService {
 
     public OrderService(@NonNull DeliveryPriceCalculator deliveryPriceCalculator,
                         @NonNull CustomerValidator customerValidator,
-                        @NonNull OrderRepo orderRepo,
+                        @NonNull OrderRepoPort orderRepoPort,
                         @NonNull EmailService emailService,
                         @NonNull OrderSettings settings,
                         @NonNull OrderItemCurrencyExchanger currencyExchanger,
@@ -39,7 +38,7 @@ public class OrderService {
                         @NonNull Clock clock) {
         this.deliveryPriceCalculator = deliveryPriceCalculator;
         this.customerValidator = customerValidator;
-        this.orderRepo = orderRepo;
+        this.orderRepoPort = orderRepoPort;
         this.emailService = emailService;
         this.emailRecipients = settings.emailRecipients();
         this.orderItemCurrencyExchanger = currencyExchanger;
@@ -47,84 +46,52 @@ public class OrderService {
         this.clock = clock;
     }
 
-    public UUID handle(MakeOrder cmd) {
-        customerValidator.assertCustomerExists(cmd.customerId());
-        final var exchangedItems = orderItemCurrencyExchanger.exchangeCurrenciesInItems(
+    public OrderId handle(MakeOrder cmd) {
+        customerValidator.assertCustomerExists(cmd.customerId().value());
+        final var exchangedItems = orderItemCurrencyExchanger.exchangeCurrencies(
             cmd.orderItems(),
             cmd.baseCurrency());
-        final var totalPrice = totalPrice(exchangedItems);
-        final var totalWeightInGrams = totalWeightInGrams(exchangedItems);
-        final var deliveryPrice = deliveryPriceCalculator.calculateDeliveryPrice(
-            totalPrice,
-            totalWeightInGrams,
-            cmd.baseCurrency());
+        final var deliveryPrice = deliveryPriceCalculator.calculateDeliveryPrice(exchangedItems);
         final var discountPrice = discountPriceCalculator.calculateDiscountPrice(
-            totalPrice,
+            exchangedItems.totalPrice(),
             deliveryPrice,
             cmd.coupon(),
             cmd.customerId());
-        final var order = OrderEntity.builder()
-            .id(randomUUID())
-            .ctime(clock.instant())
-            .currency(cmd.baseCurrency())
-            .status(OrderStatus.CONFIRMED)
-            .customerId(cmd.customerId())
-            .items(exchangedItems)
-            .totalExch(totalPrice)
-            .delivery(deliveryPrice)
-            .discount(discountPrice)
-            .discountedTotal(totalPrice.add(deliveryPrice).subtract(discountPrice))
-            .build();
-        orderRepo.save(order);
-        sendEmail(order);
-        return order.id();
+        final var order = new Order(
+            new OrderId(UUID.randomUUID()),
+            new CreateTime(Instant.now(clock)),
+            OrderStatus.CONFIRMED,
+            cmd.customerId(),
+            exchangedItems,
+            discountPrice,
+            deliveryPrice);
+        orderRepoPort.save(order);
+//        sendEmail(order);
+        return order.orderId();
     }
 
-    private static int totalWeightInGrams(List<OrderItemEntity> exchangedItems) {
-        int twInGrams = 0;
-        for (var item : exchangedItems) {
-            switch (item.weightUnit()) {
-                case GM -> twInGrams += item.weight();
-                case KG -> twInGrams += item.weight() * 1000;
-                case LB -> twInGrams += item.weight() * 453.59237;
-            }
-        }
-        return twInGrams;
-    }
-
-    private static BigDecimal totalPrice(List<OrderItemEntity> exchangedItems) {
-        BigDecimal tp = BigDecimal.ZERO;
-        for (var item : exchangedItems) {
-            tp = tp.add(item
-                    .exchPrice()
-                    .multiply(BigDecimal.valueOf(item.quantity())))
-                .setScale(2, HALF_UP);
-        }
-        return tp;
-    }
-
-    private void sendEmail(OrderEntity order) {
-        emailService.send(
-            "New order confirmed: " + order.id(),
-            """
-                New order has been confirmed:
-                id: %s
-                create time: %s
-                currency: %s
-                customer id: %s
-                total price: %s
-                discount: %s
-                discounted price: %s
-                delivery cost: %s
-                """.formatted(
-                order.id(),
-                order.ctime(),
-                order.currency(),
-                order.customerId(),
-                order.totalExch(),
-                order.discount(),
-                order.discountedTotal(),
-                order.delivery()),
-            emailRecipients);
-    }
+//    private void sendEmail(OrderEntity order) {
+//        emailService.send(
+//            "New order confirmed: " + order.id(),
+//            """
+//                New order has been confirmed:
+//                id: %s
+//                create time: %s
+//                currency: %s
+//                customer id: %s
+//                total price: %s
+//                discount: %s
+//                discounted price: %s
+//                delivery cost: %s
+//                """.formatted(
+//                order.id(),
+//                order.ctime(),
+//                order.currency(),
+//                order.customerId(),
+//                order.totalExch(),
+//                order.discount(),
+//                order.discountedTotal(),
+//                order.delivery()),
+//            emailRecipients);
+//    }
 }

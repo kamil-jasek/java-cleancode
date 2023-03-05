@@ -6,7 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-final class TestDiscountService implements DiscountPort {
+public final class TestDiscountService implements DiscountPort {
 
     private final Map<String, Discount> discounts = new HashMap<>(Map.of(
         "ABC20", new Discount(0.1)

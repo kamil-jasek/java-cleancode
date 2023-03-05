@@ -25,6 +25,6 @@ public class OrderController {
     @SneakyThrows
     ResponseEntity<Void> makeOrder(@RequestBody @Valid OrderRequest request) {
         var orderId = orderService.handle(request.toCommand());
-        return ResponseEntity.created(new URI("/api/orders/" + orderId)).build();
+        return ResponseEntity.created(new URI("/api/orders/" + orderId.id())).build();
     }
 }

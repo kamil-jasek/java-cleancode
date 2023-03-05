@@ -3,10 +3,13 @@ package pl.sda.refactoring.service;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import pl.sda.refactoring.service.domain.Currency;
+import pl.sda.refactoring.service.domain.*;
 import pl.sda.refactoring.service.port.CurrencyExchangerPort;
 
 import java.math.BigDecimal;
+
+import static pl.sda.refactoring.service.domain.Currency.USD;
+import static pl.sda.refactoring.service.domain.WeightUnit.KG;
 
 @Component
 @RequiredArgsConstructor
@@ -14,23 +17,24 @@ final class DeliveryPriceCalculator {
 
     private final CurrencyExchangerPort currencyExchanger;
 
-    BigDecimal calculateDeliveryPrice(@NonNull BigDecimal totalPrice,
-                                      int totalWeightInGrams,
-                                      @NonNull Currency baseCurrency) {
-        var deliveryPrice = BigDecimal.ZERO;
-        // delivery costs are in USD
-        var tpInUsd = currencyExchanger.exchange(totalPrice, baseCurrency, Currency.USD);
-        if (tpInUsd.compareTo(new BigDecimal("400.00")) > 0 && totalWeightInGrams < 2000) {
-            deliveryPrice = new BigDecimal("0.00"); // free delivery
-        } else if (tpInUsd.compareTo(new BigDecimal("200.00")) > 0 && totalWeightInGrams < 1000) {
-            deliveryPrice = new BigDecimal("12.00"); // first level
-        } else if (tpInUsd.compareTo(new BigDecimal("100.00")) > 0 && totalWeightInGrams < 1000) {
-            deliveryPrice = new BigDecimal("15.00"); // second level
+    Price calculateDeliveryPrice(@NonNull ExchangedOrderItemList itemList) {
+        return currencyExchanger.exchange(getPrice(itemList), itemList.baseCurrency());
+    }
+
+    private Price getPrice(ExchangedOrderItemList itemList) {
+        var totalPrice = currencyExchanger.exchange(itemList.totalPrice(), USD);
+        if (totalPrice.gt(Price.of("400.00", USD)) &&
+            itemList.totalWeight().lt(new Weight(2, KG))) {
+            return Price.of("0.00", USD); // free delivery
+        } else if (totalPrice.gt(Price.of("200.00", USD)) &&
+            itemList.totalWeight().lt(new Weight(1, KG))) {
+            return Price.of("12.00", USD); // first level
+        } else if (totalPrice.gt(Price.of("100.00", USD)) &&
+            itemList.totalWeight().lt(new Weight(1, KG))) {
+            return Price.of("15.00", USD); // second level
         } else {
             // default delivery
-            deliveryPrice = new BigDecimal("20.00");
+            return Price.of("15.00", USD);
         }
-        deliveryPrice = currencyExchanger.exchange(deliveryPrice, Currency.USD, baseCurrency);
-        return deliveryPrice;
     }
 }
