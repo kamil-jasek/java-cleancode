@@ -7,14 +7,10 @@ Content-Type: application/json
   "orderItems": [
     {
       "productId": "87b899d8-3c87-4889-80e2-34b7d4ac0f53",
-      "price": {
-        "value": "24.12",
-        "currency": "EUR"
-      },
-      "weight": {
-        "value": 0.12,
-        "unit": "KG"
-      },
+      "price": "24.12",
+      "currency": "EUR",
+      "weight": 0.12,
+      "weightUnit": "KG",
       "quantity": 2
     }
   ],
